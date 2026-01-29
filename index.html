@@ -1,532 +1,247 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>IfaK – Trivia Quiz (Web)</title>
+  <meta charset="UTF-8" />
+  <title>IfaK – Trivia Quiz</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{
-      --bg:#f7f3ea;
-      --card:#ffffff;
-      --ink:#1b1b1b;
-      --muted:#5a5a5a;
-      --green:#7CFF7A;
-      --blue:#4E79FF;
-      --red:#ff4d4d;
-      --shadow: 0 12px 28px rgba(0,0,0,.12);
-      --radius: 18px;
+    body {
+      font-family: Arial, sans-serif;
+      background: #f6f6f6;
+      margin: 0;
+      padding: 0;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--ink);
-      background: radial-gradient(1200px 700px at 20% 0%, #fff 0%, var(--bg) 55%, #efe7d5 100%);
-      min-height:100svh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:24px;
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background: white;
+      min-height: 100vh;
     }
-    .app{
-      width:min(900px, 100%);
-      background:rgba(255,255,255,.55);
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:24px;
-      padding:20px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(6px);
+    h1, h2 {
+      text-align: center;
     }
-    header{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      justify-content:space-between;
-      padding:6px 6px 14px;
+    .question {
+      font-weight: bold;
+      margin-bottom: 15px;
     }
-    .brand{
-      display:flex; gap:10px; align-items:baseline;
-      flex-wrap:wrap;
+    .answers button {
+      display: block;
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 10px;
+      cursor: pointer;
     }
-    .brand h1{ margin:0; font-size:20px; letter-spacing:.3px; }
-    .brand a{
-      font-size:12px;
-      font-weight:800;
-      color:var(--blue);
-      text-decoration:none;
-      border-bottom:1px dashed rgba(78,121,255,.55);
-      padding-bottom:1px;
+    .answers button.selected {
+      background: #ddd;
     }
-    .brand a:hover{ filter:brightness(.9); }
-
-    .top-actions{ display:flex; gap:10px; align-items:center; }
-
-    button{
-      appearance:none;
-      border:0;
-      border-radius:999px;
-      padding:10px 16px;
-      font-weight:800;
-      cursor:pointer;
-      transition: transform .06s ease, filter .15s ease;
-      box-shadow: 0 10px 18px rgba(0,0,0,.12);
+    .hidden {
+      display: none;
     }
-    button:active{ transform: translateY(1px) scale(.99); }
-    button:disabled{ opacity:.55; cursor:not-allowed; box-shadow:none; }
-
-    .btn-primary{ background: var(--green); color:#000; }
-    .btn-secondary{ background: var(--blue); color:#fff; }
-    .btn-ghost{
-      background: rgba(255,255,255,.7);
-      color: var(--ink);
-      box-shadow:none;
-      border:1px solid rgba(0,0,0,.12);
-      font-weight:800;
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
     }
-
-    .screen{
-      background:var(--card);
-      border-radius: var(--radius);
-      padding:22px;
-      box-shadow: var(--shadow);
-      border:1px solid rgba(0,0,0,.06);
+    .bigscore {
+      font-size: 2em;
+      text-align: center;
     }
-
-    .center{ text-align:center; padding:34px 18px; }
-
-    .title{
-      font-size:44px;
-      line-height:1.05;
-      margin:4px 0 10px;
-      font-weight:1000;
-      letter-spacing:1px;
-      text-transform:uppercase;
+    .muted {
+      text-align: center;
+      margin-top: 10px;
     }
-    .subtitle{
-      margin:0 0 22px;
-      color:var(--muted);
-      font-weight:800;
-      letter-spacing:.4px;
-      text-transform:uppercase;
-      font-size:13px;
-    }
-    .row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-    .hint{
-      margin-top:16px;
-      color:var(--muted);
-      font-size:14px;
-      max-width:72ch;
-      margin-left:auto;
-      margin-right:auto;
-      line-height:1.45;
-    }
-
-    .quiz{ display:grid; gap:16px; }
-
-    .meta{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-    }
-    .pill{
-      border:1px solid rgba(0,0,0,.12);
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-      color:var(--muted);
-      background: rgba(255,255,255,.7);
-      font-weight:800;
-    }
-    .progress{
-      height:10px;
-      background: rgba(0,0,0,.08);
-      border-radius:999px;
-      overflow:hidden;
-    }
-    .bar{
-      height:100%;
-      width:0%;
-      background: linear-gradient(90deg, var(--green), var(--blue));
-      transition: width .25s ease;
-    }
-
-    .question{
-      font-size:20px;
-      margin:0;
-      font-weight:1000;
-      line-height:1.25;
-    }
-    .answers{
-      display:grid;
-      gap:10px;
-      margin-top:6px;
-    }
-    .answer{
-      text-align:left;
-      width:100%;
-      border-radius:16px;
-      padding:14px 14px;
-      background: rgba(255,255,255,.85);
-      border:1px solid rgba(0,0,0,.10);
-      box-shadow:none;
-      font-weight:900;
-      line-height:1.25;
-    }
-    .answer:hover{ filter: brightness(.98); }
-    .answer[disabled]{ cursor:not-allowed; opacity:.92; }
-
-    .answer.correct{
-      border-color: rgba(0,0,0,.18);
-      outline: 3px solid rgba(124,255,122,.55);
-      background: rgba(124,255,122,.22);
-    }
-    .answer.wrong{
-      outline: 3px solid rgba(255,77,77,.35);
-      background: rgba(255,77,77,.14);
-    }
-
-    .feedback{
-      border-radius:16px;
-      padding:12px 14px;
-      border:1px dashed rgba(0,0,0,.18);
-      background: rgba(0,0,0,.03);
-      color: var(--muted);
-      font-size:14px;
-      line-height:1.45;
-      white-space: pre-wrap;
-      font-weight:700;
-    }
-
-    .footer-actions{
-      display:flex;
-      gap:10px;
-      justify-content:flex-end;
-      flex-wrap:wrap;
-      margin-top:4px;
-    }
-
-    .result h2{
-      margin:6px 0 8px;
-      font-size:28px;
-      font-weight:1000;
-    }
-    .bigscore{
-      font-size:42px;
-      font-weight:1000;
-      margin:0 0 10px;
-    }
-    .muted{ color:var(--muted); font-weight:700; line-height:1.45; }
   </style>
 </head>
-
 <body>
-  <div class="app" role="application" aria-label="Trivia Quiz">
-    <header>
-      <div class="brand">
-        <h1>IfaK</h1>
-      </div>
-      <div class="top-actions">
-        <button class="btn-ghost" id="btnQuit" type="button" title="Zur Startseite">Quit</button>
-      </div>
-    </header>
 
-    <!-- START SCREEN -->
-    <section class="screen center" id="screenStart">
-      <div class="subtitle">IfaK</div>
-      <div class="title">Trivia Quiz</div>
-      <div class="subtitle">Team Trendforschung</div>
+<div class="container">
 
-      <div class="row" style="margin-top:16px">
-        <button class="btn-primary" id="btnStart" type="button">Start</button>
-      </div>
+  <!-- START -->
+  <section id="start">
+    <h1>IfaK – Trivia Quiz</h1>
+    <p>
+      Im Team Trendforschung schreiben wir regelmäßig Artikel zu Themen aus der Welt der Kindermedien.
+      Die folgenden fünf Fragen basieren auf einigen dieser Inhalte.
+    </p>
+    <button id="btnStart">Quiz starten</button>
+  </section>
 
-      <p class="hint">
-        Im Team Trendforschung schreiben wir regelmäßig Artikel zu den unterschiedlichsten Themen aus der Welt der Kindermedien.
-        Die folgenden <b>5 Fragen</b> basieren auf ein paar dieser Artikel. Beantworte sie um die Themen mit denen wir uns beschäftigen besser kennen zu lernen</b>!
-  
-      </p>
-    </section>
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <h2 id="progress"></h2>
+    <div class="question" id="questionText"></div>
+    <div class="answers" id="answers"></div>
 
-    <!-- QUIZ SCREEN -->
-    <section class="screen quiz" id="screenQuiz" hidden>
-      <div class="meta">
-        <div class="pill" id="pillCounter">Frage 1/5</div>
-        <div class="pill" id="pillScore">Punkte: 0</div>
-        <div style="flex:1; min-width:220px;">
-          <div class="progress" aria-label="Fortschritt">
-            <div class="bar" id="bar"></div>
-          </div>
-        </div>
-      </div>
+    <div class="nav-buttons">
+      <button id="btnBack">Zurück</button>
+      <button id="btnNext">Weiter</button>
+    </div>
+  </section>
 
-      <h2 class="question" id="qText"></h2>
-      <div class="answers" id="answers"></div>
-      <div class="feedback" id="feedback" hidden></div>
+  <!-- RESULT -->
+  <section id="result" class="hidden">
+    <h2>Geschafft!</h2>
+    <p class="bigscore" id="resultScore"></p>
+    <p class="muted" id="resultText"></p>
 
-      <div class="footer-actions">
-        <button class="btn-ghost" id="btnBack" type="button" title="Vorherige Frage">Zurück</button>
-        <button class="btn-secondary" id="btnNext" type="button" disabled>Nächste</button>
-      </div>
-    </section>
+    <div class="nav-buttons">
+      <button id="btnRestart">Nochmal spielen</button>
+      <button id="btnReview">Antworten ansehen</button>
+    </div>
+  </section>
 
-    <!-- RESULT SCREEN -->
-    <section class="screen center result" id="screenResult" hidden>
-      <div class="subtitle">PUHH GESCHAFFT..</div>
-      <h2>Ergebnis</h2>
-      <p class="bigscore" id="resultScore">0 / 5</p>
-      <p class="muted" id="resultText"></p>
-      <div class="row" style="margin-top:14px">
-        <button class="btn-primary" id="btnRestart" type="button">Nochmal spielen</button>
-        <button class="btn-ghost" id="btnReview" type="button">Antworten ansehen</button>
-      </div>
-    </section>
-  </div>
+</div>
 
 <script>
-  // --- FRAGEN (Links bitte ersetzen)
   const QUESTIONS = [
     {
-      text: "Die National Library Singapur hat ein spannendes Angebot für Kinder entwickelt: Die „NLB Playbrary“. Die “NLB Playbrary” ist...",
-      
+      text: "Die „NLB Playbrary“ ist …",
       options: [
-        "eine digitale Hörbuch-quiz plattform",
-        "eine bibliothek für besondere brettspiele",
+        "eine digitale Hörbuchplattform",
+        "eine Bibliothek für Brettspiele",
         "eine KI-gestützte digitale Bibliothek",
-        "eine bibliothek für musikinstrumente"
+        "eine Musikbibliothek"
       ],
       correct: 2,
-      explanation: "Die NLB Playbrary ist eine KI-gestützte digitale Bibliothek, die bekannte Kinder- und Jugendbücher in interaktive Abenteuer verwandelt, bei denen Kinder mithilfe von ChatGPT selbst die Hauptrolle übernehmen und den Verlauf der Geschichte aktiv mitgestalten."
+      explanation: "Die NLB Playbrary ist eine KI-gestützte digitale Bibliothek, in der Kinder interaktive Geschichten erleben."
     },
     {
       text: "Ozobots sind …",
-      
       options: [
-        "kleine Lernroboter für Kinder, die mithilfe von Farbcodes auf Papier oder über visuelle Blockprogrammierung gesteuert werden",
-        "Ozobots sind Lernroboter für Kinder, die Geschichten erzählen und auf Fragen reagieren, um Lesen und Sprachverständnis spielerisch zu fördern."
+        "kleine Lernroboter mit Farbcodes",
+        "digitale Vorleseprogramme"
       ],
       correct: 0,
-      explanation: "Kinder können ihre Codes selbst zeichnen. Unterschiedliche Farbfolgen stehen dabei für unterschiedliche Funktionen. Zum Beispiel dreht sich der Roboter, wenn er die Farbkombination Grün–Rot–Grün–Rot erkennt."
+      explanation: "Ozobots sind kleine Lernroboter, die durch Farbcodes oder Blockprogrammierung gesteuert werden."
     },
     {
       text: "Welche Aussage zu Pippi Langstrumpf stimmt?",
-      
       options: [
-        "Astrid Lindgren entwickelte die Figur Pippi Langstrumpf ursprünglich für ein Schulbuchprojekt, das sie 1941er im Auftrag eines Verlages schrieb.",
-        "Astrid Lindgren erfand die Figur Pippi Langstrumpf, nachdem ihre kranke Tochter sie 1941 bat, ihr eine Geschichte über ein Mädchen mit diesem Namen zu erzählen."
+        "Sie entstand als Schulbuchprojekt",
+        "Astrid Lindgren erfand sie für ihre Tochter"
       ],
       correct: 1,
-      explanation: "Da ihre Tochter auch nach ihrer Genesung weitere Pippi-Geschichten hören wollte, fasste Astrid Lindgren diese 1944 in einem Manuskript zusammen, das zunächst abgelehnt wurde; später folgten Erfolge bei Schreibwettbewerben, eine Tätigkeit als Lektorin und 1949 dann die erste deutsche Veröffentlichung von Pippi Langstrumpf im Oetinger Verlag."
+      explanation: "Astrid Lindgren erfand Pippi Langstrumpf für ihre Tochter, als diese krank war."
     },
     {
-      text: "Die „Worst Children’s Library“ ist ein satirischer Negativpreis, der an besonders problematische/ pädagogisch fragwürdige Kinderbücher vergeben wird, ähnlich wie eine „Goldene Himbeere“ für Kinderliteratur.",
-   
-      options: ["ja", "nein"],
-      correct: 1,
-      explanation: "Die „Worst Children’s Library“ war eine Ausstellung, die fiktive Bücher zeigte, welche sich mit realen digitale Bedrohungen für Kinder und Jugendliche, wie Selbstverletzung oder Mobbing, beschäftigen. Beispielhafte Titel, lauteten „100 Wege, sich selbst zu verletzen“, „Grausame Methoden, Tiere zu töten“ oder „1,2,3, zähl mit mir Kalorien“."
-    },
-    {
-      text: "Der internationale Kinderbuchtag am 2. April, ist auch der Geburtstag von:",
- 
+      text: "Die „Worst Children’s Library“ war …",
       options: [
-        "Cornelia Funke",
+        "ein Negativpreis",
+        "eine Ausstellung mit fiktiven Büchern"
+      ],
+      correct: 1,
+      explanation: "Die Ausstellung thematisierte problematische digitale Inhalte für Kinder."
+    },
+    {
+      text: "Der Internationale Kinderbuchtag wird am Geburtstag von … gefeiert.",
+      options: [
         "Astrid Lindgren",
         "Hans Christian Andersen",
         "Erich Kästner"
       ],
-      correct: 2,
-      explanation: "Hans Christian Andersen wurde unter anderem durch seine Märchen “Des Kaisers neue Kleider”, “Die Prinzessin auf der Erbse” und “Die kleine Meerjungfrau” bekannt. Der Internationale Kinderbuchtag wird seit 1967 an seinem Geburtstag gefeiert, um Freude am Lesen und Interesse an Kinder- und Jugendbüchern zu wecken."
+      correct: 1,
+      explanation: "Der Internationale Kinderbuchtag findet am Geburtstag von Hans Christian Andersen statt."
     }
   ];
 
-  // --- STATE
   let idx = 0;
+  let selections = Array(QUESTIONS.length).fill(null);
   let score = 0;
-  const selections = Array(QUESTIONS.length).fill(null);
 
-  // --- DOM (mit Fallback-Checks)
-  const el = (id) => document.getElementById(id);
+  const startScreen = document.getElementById("start");
+  const quizScreen = document.getElementById("quiz");
+  const resultScreen = document.getElementById("result");
 
-  const screenStart  = el("screenStart");
-  const screenQuiz   = el("screenQuiz");
-  const screenResult = el("screenResult");
+  const questionText = document.getElementById("questionText");
+  const answersDiv = document.getElementById("answers");
+  const progress = document.getElementById("progress");
 
-  const btnStart   = el("btnStart");
-  const btnQuit    = el("btnQuit");
-  const btnNext    = el("btnNext");
-  const btnBack    = el("btnBack");
-  const btnRestart = el("btnRestart");
-  const btnReview  = el("btnReview");
+  const resultScore = document.getElementById("resultScore");
+  const resultText = document.getElementById("resultText");
 
-  const qText      = el("qText");
-  const answersEl  = el("answers");
-  const feedbackEl = el("feedback");
-
-  const pillCounter = el("pillCounter");
-  const pillScore   = el("pillScore");
-  const bar         = el("bar");
-
-  const resultScore = el("resultScore");
-  const resultText  = el("resultText");
-
-  const articleLink = el("articleLink");
-
-  function showScreen(which){
-    screenStart.hidden  = which !== "start";
-    screenQuiz.hidden   = which !== "quiz";
-    screenResult.hidden = which !== "result";
-  }
-
-  function recalcScore(){
-    let s = 0;
-    for(let i=0;i<QUESTIONS.length;i++){
-      if(selections[i] !== null && selections[i] === QUESTIONS[i].correct) s++;
-    }
-    score = s;
-  }
-
-  function updateMeta(){
-    pillCounter.textContent = `Frage ${idx+1}/${QUESTIONS.length}`;
-    pillScore.textContent = `Punkte: ${score}`;
-    bar.style.width = `${Math.round(((idx+1)/QUESTIONS.length)*100)}%`;
-  }
-
-  function updateArticleLink(){
-    const q = QUESTIONS[idx];
-    if(q?.link && q.link.trim() && q.link !== "#"){
-      articleLink.href = q.link;
-      articleLink.style.visibility = "visible";
-    }else{
-      articleLink.href = "#";
-      articleLink.style.visibility = "hidden";
-    }
-  }
-
-  function renderQuestion(){
-    recalcScore();
-    updateMeta();
-    updateArticleLink();
-
-    const q = QUESTIONS[idx];
-    qText.textContent = q.text;
-
-    answersEl.innerHTML = "";
-    feedbackEl.hidden = true;
-    feedbackEl.textContent = "";
-
-    const selected = selections[idx];
-
-    q.options.forEach((opt, i) => {
-      const btn = document.createElement("button");
-      btn.className = "answer";
-      btn.type = "button";
-      btn.textContent = `${String.fromCharCode(65+i)}. ${opt}`;
-
-      const alreadyAnswered = selected !== null;
-
-      if(alreadyAnswered){
-        btn.disabled = true;
-        if(i === q.correct) btn.classList.add("correct");
-        if(i === selected && selected !== q.correct) btn.classList.add("wrong");
-      }else{
-        btn.addEventListener("click", () => chooseAnswer(i));
-      }
-
-      answersEl.appendChild(btn);
-    });
-
-    btnBack.disabled = (idx === 0);
-    btnNext.disabled = (selected === null);
-    btnNext.textContent = (idx === QUESTIONS.length - 1) ? "Auswertung" : "Nächste";
-  }
-
-  function chooseAnswer(choiceIndex){
-    selections[idx] = choiceIndex;
-    recalcScore();
-
-    const q = QUESTIONS[idx];
-    const correct = (choiceIndex === q.correct);
-
+  document.getElementById("btnStart").onclick = () => {
+    idx = 0;
+    selections.fill(null);
+    showScreen("quiz");
     renderQuestion();
+  };
 
-    feedbackEl.hidden = false;
-    if(correct){
-      feedbackEl.textContent = `✅ Richtig!\n\n${q.explanation || ""}`;
-    }else{
-      feedbackEl.textContent =
-        `❌ Leider falsch.\n` +
-        `Richtige Antwort: ${String.fromCharCode(65+q.correct)}. ${q.options[q.correct]}\n\n` +
-        `${q.explanation || ""}`;
-    }
-
-    btnNext.disabled = false;
-    pillScore.textContent = `Punkte: ${score}`;
-  }
-
-  function next(){
-    if(selections[idx] === null) return;
-    if(idx < QUESTIONS.length - 1){
+  document.getElementById("btnNext").onclick = () => {
+    if (selections[idx] === null) return;
+    if (idx < QUESTIONS.length - 1) {
       idx++;
       renderQuestion();
-    }else{
+    } else {
       showResults();
     }
-  }
+  };
 
-  function back(){
-    if(idx > 0){
+  document.getElementById("btnBack").onclick = () => {
+    if (idx > 0) {
       idx--;
       renderQuestion();
     }
-  }
+  };
 
-  function resetGame(){
+  document.getElementById("btnRestart").onclick = () => {
     idx = 0;
-    for(let i=0;i<selections.length;i++) selections[i] = null;
-    score = 0;
-    bar.style.width = "0%";
+    selections.fill(null);
+    showScreen("start");
+  };
+
+  document.getElementById("btnReview").onclick = () => {
+    idx = 0;
+    showScreen("quiz");
+    renderQuestion(true);
+  };
+
+  function showScreen(name) {
+    startScreen.classList.add("hidden");
+    quizScreen.classList.add("hidden");
+    resultScreen.classList.add("hidden");
+
+    if (name === "start") startScreen.classList.remove("hidden");
+    if (name === "quiz") quizScreen.classList.remove("hidden");
+    if (name === "result") resultScreen.classList.remove("hidden");
   }
 
-  function showResults(){
-    recalcScore();
-    showScreen("result");
+  function renderQuestion(review = false) {
+    const q = QUESTIONS[idx];
+    progress.textContent = `Frage ${idx + 1} von ${QUESTIONS.length}`;
+    questionText.textContent = q.text;
+    answersDiv.innerHTML = "";
 
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement("button");
+      btn.textContent = opt;
+      if (selections[idx] === i) btn.classList.add("selected");
+
+      btn.onclick = () => {
+        if (review) return;
+        selections[idx] = i;
+        renderQuestion();
+      };
+
+      answersDiv.appendChild(btn);
+    });
+  }
+
+  function showResults() {
+    score = 0;
+    selections.forEach((sel, i) => {
+      if (sel === QUESTIONS[i].correct) score++;
+    });
+
+    showScreen("result");
     resultScore.textContent = `${score} / ${QUESTIONS.length}`;
     resultText.textContent =
-      "Geschafft! Du hast alle Fragen beantwortet. Zeige diesen Bildschirm einem IfaK-Mitglied und erhalte deinen Sticker für den IfaK-Führerschein.";
+      "Du hast alle Fragen beantwortet. Zeige diesen Bildschirm einem IfaK-Mitglied und erhalte deinen Sticker.";
   }
-
-  function startNewGame(){
-    resetGame();
-    showScreen("quiz");
-    renderQuestion();
-  }
-
-  function startReview(){
-    // Review = bereits beantwortete Fragen anzeigen; falls noch nicht gespielt, startet es einfach normal
-    idx = 0;
-    showScreen("quiz");
-    renderQuestion();
-  }
-
-  // --- EVENTS (wichtig: müssen nach den Funktionen kommen)
-  btnStart.addEventListener("click", startNewGame);
-  btnQuit.addEventListener("click", () => showScreen("start"));
-  btnNext.addEventListener("click", next);
-  btnBack.addEventListener("click", back);
-  btnRestart.addEventListener("click", startNewGame);
-  btnReview.addEventListener("click", startReview);
-
-  // initial
-  showScreen("start");
 </script>
+
 </body>
 </html>
-
-
-
-
 
 
 
